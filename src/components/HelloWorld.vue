@@ -3,29 +3,38 @@
     <div class="filter-area">
     <div class="filter-note">筛选</div>
     <el-row type="flex" justify="start" :gutter="20" class="filter">
-      <el-col :span="8" >
+      <el-col :span="12" >
         <div class="filter-section">
           <span class="filter-date-info">选择日期</span>
           <el-date-picker
-            v-model="time"
-            @change="handleTimeChange"
-            type="datetime"
+            v-model="selectedDate"
+            @change="handleDateChange"
+            @focus="handleFoucus"
+            type="date"
             size="mini"
             :picker-options="pickerOptions"
-            placeholder="选择日期时间"
-            default-time="12:00:00"
+            placeholder="选择日期"
             class="filter-input"
             >
           </el-date-picker>
+          <el-time-picker
+            v-model="selectedTime"
+            v-loading="loadingTime"
+            @change="handleTimeChange"
+            size="mini"
+            format="HH"
+            :picker-options="{selectableRange:currentAvailableTime}"
+            placeholder="选择时间"
+            class="filter-input"
+            >
+          </el-time-picker>
         </div>
       </el-col>
-      <el-col :span="8">
+      <el-col :span="12">
         <div class="filter-section">
         <span class="filter-date-info">每页数量</span>
         <el-input class="filter-input" v-model.number="pageSize" size="mini" width="220" type="number" placeholder="请输入内容" @change="handlePageSizeChange"></el-input>
       </div>
-      </el-col>
-      <el-col :span="8">
       </el-col>
     </el-row>
     </div>
@@ -109,7 +118,7 @@
 
 <script>
 import {formatToYMDH} from '../common/utils/time.js'
-import {getAmazonBestSellers} from '../api/amazon.js'
+import {getAmazonBestSellers, getAvailableTime} from '../api/amazon.js'
 export default {
   name: 'HelloWorld',
   props: {
@@ -121,13 +130,18 @@ export default {
       pageSize:10,
       pageIndex:1,
       time:new Date(),
+      currentDate:'',
+      selectedDate:new Date,
+      selectedTime:'18:30:00',
+      currentAvailableTime:['18:30:00 - 20:30:00'],
       total:0,
       loading:false,
+      loadingTime:false,
       pickerOptions:{
         disabledDate(time) {
             return time.getTime() > Date.now();
           }
-      }
+      },
     }
   },
   mounted: function (){
@@ -135,12 +149,15 @@ export default {
   },
   methods:{
     init(){
-      this.getList()
+      this.currentDate = formatToYMDH(this.selectedDate).slice(0,8)
+      this.getList(this.currentDate)
+      this.getAvailableTime(this.currentDate)
     },
-    getList(){
+    getList(time){
+      if(!time) return 
       this.loading = true
       const sendData = {
-        time:formatToYMDH(this.time),
+        time,
         page_index:this.pageIndex,
         page_size:this.pageSize
       }
@@ -169,12 +186,41 @@ export default {
       this.getList()
     },
     handleTimeChange(){
-      if(!this.time) this.time = formatToYMDH(new Date())
-      this.getList()
+      if(!this.selectedTime) return 
+      const yy = this.selectedDate.getFullYear()
+      const mm = this.selectedDate.getMonth()
+      const dd = this.selectedDate.getDate()
+      const hh = this.selectedTime.getHours()
+      const time = formatToYMDH(new Date(yy, mm, dd, hh))
+      this.getList(time)
     },
-    handlePageSizeChange(){
+    handleDateChange(){
+      const nowDate = formatToYMDH(this.selectedDate).slice(0,8)
+      if(nowDate !== this.currentDate) {
+        this.currentDate = nowDate
+        this.getAvailableTime(this.currentDate)
+      }
+    },
+    handleFoucus(){
+      console.log('foucus')
+    },
+    getAvailableTime(time){
+      this.loadingTime = true
+      this.pickerOptions.selectableRange = ''
       
-    }
+      const sendData = {time}
+      getAvailableTime(sendData).then(res=>{
+        const data = res.data;
+        this.currentAvailableTime = data.map((item)=>{
+          const ntime = Number(item.slice(8))
+          return `${ntime}:00:00 - ${ntime}:59:59`
+        })
+        this.loadingTime = false
+        this.pickerOptions.selectableRange = [...this.currentAvailableTime]    
+      })
+
+    },
+    handlePageSizeChange(e){console.log(e)}
   }
 }
 </script>
@@ -207,7 +253,7 @@ a {
 }
 .filter-note{
   text-align: left;
-  margin-left: 25px;
+  margin-left: 15px;
   margin-bottom: 10px;
 }
 .filter{
