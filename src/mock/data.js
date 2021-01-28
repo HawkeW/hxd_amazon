@@ -127,5 +127,7 @@ const res = {
         "total": 10
     }
 }
-
-export default res;
+const trends = []
+export {
+    res
+};

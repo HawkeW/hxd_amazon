@@ -120,7 +120,7 @@
 import {formatToYMDH} from '../common/utils/time.js'
 import {getAmazonBestSellers, getAvailableTime} from '../api/amazon.js'
 export default {
-  name: 'HelloWorld',
+  name: 'BestSellers',
   props: {
     msg: String
   },

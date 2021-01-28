@@ -1,28 +1,33 @@
 <template>
   <div id="app">
-    <h2>Best Sellers in Electronics</h2>
-    <HelloWorld/>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
 }
 </script>
 
 <style>
+li{
+	list-style-type:none;
+}
+a{
+	color: #2c3e50;
+	text-decoration: none;
+}
+*{
+	margin: 0;
+	padding: 0;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
