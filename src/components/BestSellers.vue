@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
+    <h3>Best sellers in Electronics</h3>
     <div class="filter-area">
-    <div class="filter-note">筛选</div>
     <el-row type="flex" justify="start" :gutter="20" class="filter">
       <el-col :span="12" >
         <div class="filter-section">
@@ -23,6 +23,7 @@
             @change="handleTimeChange"
             size="mini"
             format="HH"
+            :disabled="JSON.stringify(currentAvailableTime)=='[]'"
             :picker-options="{selectableRange:currentAvailableTime}"
             placeholder="选择时间"
             class="filter-input"
@@ -43,7 +44,7 @@
     :data="tableData"
     border
     stripe
-    style="width: 920px;margin: 0 auto;">
+    style="margin: 0 auto;">
       <el-table-column
         prop="rank"
         label="排名"
@@ -70,7 +71,7 @@
       <el-table-column
         prop="name"
         label="产品名称"
-        width="200"
+        min-width="200"
         align="center">
         <template slot-scope="scope">
            <a :href="scope.row.goods_url" alt= "" target="_blank">{{scope.row.name}}</a>
@@ -104,6 +105,13 @@
         align="center"
         >
       </el-table-column>
+       <el-table-column
+        label="操作"
+        width="50"
+        align="center"
+        >
+        <i class="trends" title="查看趋势图" @click="operate"></i>
+      </el-table-column>
     </el-table>
 
     <el-pagination
@@ -129,11 +137,10 @@ export default {
       tableData:[],
       pageSize:10,
       pageIndex:1,
-      time:new Date(),
       currentDate:'',
       selectedDate:new Date,
-      selectedTime:'18:30:00',
-      currentAvailableTime:['18:30:00 - 20:30:00'],
+      selectedTime:'',
+      currentAvailableTime:[],
       total:0,
       loading:false,
       loadingTime:false,
@@ -146,6 +153,16 @@ export default {
   },
   mounted: function (){
     this.init()
+  },
+  computed:{
+    time(){
+      const yy = this.selectedDate.getFullYear()
+      const mm = this.selectedDate.getMonth()
+      const dd = this.selectedDate.getDate()
+      const hh = this.selectedTime.getHours()
+      const time = formatToYMDH(new Date(yy, mm, dd, hh))
+      return time
+    }
   },
   methods:{
     init(){
@@ -183,16 +200,11 @@ export default {
     },
     handleCurrentChange(e){
       this.pageIndex = e
-      this.getList()
+      this.getList(this.time)
     },
     handleTimeChange(){
       if(!this.selectedTime) return 
-      const yy = this.selectedDate.getFullYear()
-      const mm = this.selectedDate.getMonth()
-      const dd = this.selectedDate.getDate()
-      const hh = this.selectedTime.getHours()
-      const time = formatToYMDH(new Date(yy, mm, dd, hh))
-      this.getList(time)
+      this.getList(this.time)
     },
     handleDateChange(){
       const nowDate = formatToYMDH(this.selectedDate).slice(0,8)
@@ -210,25 +222,50 @@ export default {
       
       const sendData = {time}
       getAvailableTime(sendData).then(res=>{
-        const data = res.data;
-        this.currentAvailableTime = data.map((item)=>{
-          const ntime = Number(item.slice(8))
-          return `${ntime}:00:00 - ${ntime}:59:59`
-        })
-        this.loadingTime = false
-        this.pickerOptions.selectableRange = [...this.currentAvailableTime]    
+        try{
+          const data = res.data;
+          if(data==undefined) {
+            throw 'no data'
+          }     
+          this.currentAvailableTime = data.map((item)=>{
+            const ntime = item.slice(8)
+            
+            return `${ntime}:00:00 - ${ntime}:59:59`
+          })
+          this.loadingTime = false
+          this.pickerOptions.selectableRange = [...this.currentAvailableTime]    
+        }
+        catch(e){
+          this.loadingTime = false
+          this.pickerOptions.selectableRange = [] 
+          console.log(e)
+        }
       })
 
     },
-    handlePageSizeChange(e){console.log(e)}
+    operate(e){
+      const path = e.target.className
+      switch(path){
+        case 'trends':
+          this.$router.push('/product-trends')
+          break;
+        default:
+          break;
+      }
+    },
+    handlePageSizeChange(e){
+      this.pageSize = Number(e)
+      this.getList(this.time)
+    }
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+h3{
+  height: 40px;
+  line-height: 40px;
 }
 ul {
   list-style-type: none;
@@ -245,11 +282,11 @@ a {
   align-items: center;
 }
 .filter-area{
-  background: #f5f5f5;  
+  background: #cccccc;  
   padding: 20px 0;
   margin-left: 40px;
-  width: 920px;
   margin: 0px auto;
+  border-radius: 10px 10px 0 0;
 }
 .filter-note{
   text-align: left;
@@ -257,7 +294,7 @@ a {
   margin-bottom: 10px;
 }
 .filter{
-  margin-bottom: 40px;
+  
 }
 .filter span{
   font-size: 16px;
@@ -279,5 +316,22 @@ a {
 }
 .time-picker{
 
+}
+.el-table{
+  border-radius: 0 0 10px 10px;
+}
+.trends{
+  display: inline-block;
+  background-image: url('../assets/trend.png');
+  height: 20px;
+  width: 20px;
+  background-size: 20px 20px;
+}
+.trends:hover{
+  cursor:pointer;
+  background-image: url('../assets/trend-highlight.png');
+}
+.trends:hover:after{
+    /*content: attr(title);*/
 }
 </style>

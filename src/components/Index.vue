@@ -1,22 +1,22 @@
 <template>
-	<el-container>
-	<el-header style="height:80px;">
-		<el-row>
-			<el-col :span="24">
-				<div class="navigation-bar">
-					<NavigationBar />
-				</div>
-			</el-col>
-		</el-row>
-	</el-header>
-	<el-container>
-		<el-aside width="200px">
-			<SideBar />
-		</el-aside>
-		<el-main>
-			<MainContent />
-		</el-main>
-	</el-container>
+	<el-container class="site-container">
+		<el-header class="head" style="height: 8%;">
+			<el-row>
+				<el-col :span="24">
+					<div class="navigation-bar">
+						<NavigationBar />
+					</div>
+				</el-col>
+			</el-row>
+		</el-header>
+		<el-container class="content-container">
+			<el-aside width="200px">
+				<SideBar />
+			</el-aside>
+			<el-main>
+				<MainContent />
+			</el-main>
+		</el-container>
 	</el-container>
 </template>
 
@@ -40,6 +40,9 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.el-container{
+	
+}
 .el-header{
 	border-bottom: 1px solid #eeeeee;
 	background-color: #333333;
@@ -53,5 +56,14 @@ export default {
 }
 .el-main{
 	padding: 40px 20px;
+}
+.site-container{
+	height: 100%;
+}
+.head{
+	height: 10%;
+}
+.content-container{
+	height: 92%;
 }
 </style>
